@@ -5,7 +5,7 @@ import cafe.com.api_gateway.filter.JwtFilter;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
+import org.springframework.web.servlet.function.RequestPredicates;
 import org.springframework.web.servlet.function.RouterFunction;
 import org.springframework.web.servlet.function.ServerResponse;
 
@@ -29,14 +29,15 @@ public class RouteConfig {
     }
 
     // =========================
-    // AUTH REGISTER
+    // AUTH SERVICE (Public - No JWT/API Key)
+    // /api/auth/** → :8081
     // =========================
     @Bean
-    public RouterFunction<ServerResponse> authRegisterRoute() {
+    public RouterFunction<ServerResponse> authRoute() {
 
-        return route("auth-register")
-                .POST(
-                        "/api/auth/register",
+        return route("auth-service")
+                .route(
+                        RequestPredicates.path("/api/auth/**"),
                         http()
                 )
                 .before(uri("http://localhost:8081"))
@@ -45,31 +46,15 @@ public class RouteConfig {
     }
 
     // =========================
-    // AUTH LOGIN
-    // =========================
-    @Bean
-    public RouterFunction<ServerResponse> authLoginRoute() {
-
-        return route("auth-login")
-                .POST(
-                        "/api/auth/login",
-                        http()
-                )
-                .before(uri("http://localhost:8081"))
-                .filter(rewritePath("/api/(?<segment>.*)", "/${segment}"))
-                .build();
-    }
-
-    // =========================
-    // MENU SERVICE
-    // API KEY + JWT
+    // MENU SERVICE (Protected)
+    // /api/menu/** → :8082
     // =========================
     @Bean
     public RouterFunction<ServerResponse> menuRoute() {
 
         return route("menu-service")
-                .GET(
-                        "/api/menu",
+                .route(
+                        RequestPredicates.path("/api/menu/**"),
                         http()
                 )
                 .before(uri("http://localhost:8082"))
@@ -79,6 +64,69 @@ public class RouteConfig {
                 .filter(apiKeyFilter)
 
                 // Then JWT
+                .filter(jwtFilter)
+
+                .build();
+    }
+
+    // =========================
+    // ORDER SERVICE (Protected)
+    // /api/orders/** → :8083
+    // =========================
+    @Bean
+    public RouterFunction<ServerResponse> orderRoute() {
+
+        return route("order-service")
+                .route(
+                        RequestPredicates.path("/api/orders/**"),
+                        http()
+                )
+                .before(uri("http://localhost:8083"))
+                .filter(rewritePath("/api/(?<segment>.*)", "/${segment}"))
+
+                .filter(apiKeyFilter)
+                .filter(jwtFilter)
+
+                .build();
+    }
+
+    // =========================
+    // PAYMENT SERVICE (Protected)
+    // /api/payments/** → :8084
+    // =========================
+    @Bean
+    public RouterFunction<ServerResponse> paymentRoute() {
+
+        return route("payment-service")
+                .route(
+                        RequestPredicates.path("/api/payments/**"),
+                        http()
+                )
+                .before(uri("http://localhost:8084"))
+                .filter(rewritePath("/api/(?<segment>.*)", "/${segment}"))
+
+                .filter(apiKeyFilter)
+                .filter(jwtFilter)
+
+                .build();
+    }
+
+    // =========================
+    // FEEDBACK SERVICE (Protected)
+    // /api/feedback/** → :8085
+    // =========================
+    @Bean
+    public RouterFunction<ServerResponse> feedbackRoute() {
+
+        return route("feedback-service")
+                .route(
+                        RequestPredicates.path("/api/feedback/**"),
+                        http()
+                )
+                .before(uri("http://localhost:8085"))
+                .filter(rewritePath("/api/(?<segment>.*)", "/${segment}"))
+
+                .filter(apiKeyFilter)
                 .filter(jwtFilter)
 
                 .build();
